@@ -126,6 +126,19 @@
   .sheet .opt:active { background: #3e3e3e; }
   .sheet .opt.danger { color: #ff6b6b; }
 
+  .yt-input { width: 100%; background: #3e3e3e; color: var(--text); border: none; padding: 14px 12px; border-radius: 6px; font-size: 16px; }
+  .yt-input:focus { outline: 2px solid var(--accent); }
+  .yt-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .yt-actions button { flex: 1; padding: 12px; font-size: 15px; }
+  .yt-actions .ghost { background: transparent; color: var(--text); border: 1px solid #777; }
+  .yt-note { color: var(--muted); font-size: 12px; margin-top: 12px; line-height: 1.4; }
+  .dl { position: fixed; left: 8px; right: 8px; top: calc(var(--safe-top) + 64px); max-width: 704px; margin: 0 auto; z-index: 30;
+        background: #282828; border-radius: 8px; padding: 10px 12px; display: none; align-items: center; gap: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
+  .dl.show { display: flex; }
+  .dl .meta { flex: 1; min-width: 0; font-size: 13px; }
+  .dl .bar { height: 3px; background: #555; border-radius: 2px; margin-top: 6px; overflow: hidden; }
+  .dl .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+  .dl button { color: var(--muted); font-size: 13px; font-weight: 600; }
   .toast { position: fixed; left: 50%; bottom: calc(var(--safe-bottom) + 140px); transform: translateX(-50%) translateY(20px);
            background: #fff; color: #000; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; z-index: 60;
            opacity: 0; transition: .25s; pointer-events: none; white-space: nowrap; }
@@ -158,6 +171,8 @@
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M9 3h6l1 2h4v2H4V5h4zM6 9h12l-1 12H7z"/></symbol>
   <symbol id="i-minus" viewBox="0 0 24 24"><path d="M4 11h16v2H4z"/></symbol>
   <symbol id="i-edit" viewBox="0 0 24 24"><path d="M3 17.3V21h3.8L17.8 9.9l-3.7-3.7zM20.7 7a1 1 0 0 0 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0l-1.8 1.8 3.7 3.7z"/></symbol>
+  <symbol id="i-yt" viewBox="0 0 24 24"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 2h8l6 6v14H4V2zm7 1.5V9h5.5z"/></symbol>
   <symbol id="i-install" viewBox="0 0 24 24"><path d="M11 3h2v9l3.3-3.3 1.4 1.4L12 15.8l-5.7-5.7 1.4-1.4L11 12zM4 18h16v2H4z"/></symbol>
 </svg>
 
@@ -216,6 +231,11 @@
 <div class="backdrop" id="backdrop"></div>
 <div class="sheet" id="sheet"></div>
 <div class="toast" id="toast"></div>
+<div class="dl" id="dl">
+  <svg style="color:#ff4e45"><use href="#i-yt"/></svg>
+  <div class="meta"><div id="dlText" class="t-title">Baixando…</div><div class="bar"><i id="dlBar"></i></div></div>
+  <button id="dlCancel">Cancelar</button>
+</div>
 
 <input type="file" id="fileInput" accept="audio/*,.mp3,.m4a,.aac,.flac,.ogg,.opus,.wav" multiple hidden>
 <input type="file" id="folderInput" webkitdirectory multiple hidden>
@@ -360,6 +380,129 @@ async function importFiles(fileList) {
   toast(added ? `${added} música${added > 1 ? 's' : ''} adicionada${added > 1 ? 's' : ''}` : 'Essas músicas já estão na biblioteca');
 }
 
+// ---------- Baixar do YouTube (só no app Android) ----------
+const YT = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.YouTube;
+const dlQueue = [];
+let dlBusy = false;
+
+function addSheet() {
+  openSheet(`<div class="head"><div class="t-title">Adicionar músicas</div></div>
+    <button class="opt" data-s="files">${icon('file')}Arquivos do celular</button>
+    <button class="opt" data-s="yt"><svg style="color:#ff4e45"><use href="#i-yt"/></svg>Baixar do YouTube (link)</button>`);
+  $('sheet').onclick = e => {
+    const b = e.target.closest('[data-s]'); if (!b) return;
+    if (b.dataset.s === 'files') { closeSheet(); $('fileInput').click(); }
+    else ytSheet();
+  };
+}
+
+function ytSheet() {
+  if (!YT) {
+    openSheet(`<div class="head"><div class="t-title">Baixar do YouTube</div></div>
+      <p class="yt-note" style="padding:0 8px 12px;font-size:14px">Essa função está disponível no app Android (APK). No navegador não é possível baixar do YouTube.</p>`);
+    $('sheet').onclick = null;
+    return;
+  }
+  openSheet(`<div class="head"><svg style="color:#ff4e45"><use href="#i-yt"/></svg><div class="t-title">Baixar do YouTube</div></div>
+    <div style="padding:0 8px 8px">
+      <input class="yt-input" id="ytUrl" type="url" inputmode="url" placeholder="Cole o link do vídeo aqui" autocomplete="off">
+      <div class="yt-actions">
+        <button class="pill ghost" id="ytPaste">Colar</button>
+        <button class="pill" id="ytGo">Baixar</button>
+      </div>
+      <p class="yt-note">Dica: no app do YouTube, toque em <b>Compartilhar</b> e escolha <b>Minhas Músicas</b> para baixar direto.<br>Baixe apenas conteúdo que você tem direito de baixar.</p>
+    </div>`);
+  $('sheet').onclick = null;
+  const input = $('ytUrl');
+  setTimeout(() => input.focus(), 300);
+  $('ytPaste').onclick = async () => {
+    try { input.value = (await navigator.clipboard.readText()).trim(); }
+    catch (e) { toast('Toque e segure no campo para colar'); input.focus(); }
+  };
+  const go = () => {
+    const url = extractUrl(input.value);
+    if (!url) { toast('Link inválido'); return; }
+    closeSheet(); queueDownload(url);
+  };
+  $('ytGo').onclick = go;
+  input.onkeydown = e => { if (e.key === 'Enter') go(); };
+}
+
+function extractUrl(text) {
+  const m = String(text || '').match(/https?:\/\/\S+/);
+  return m ? m[0] : null;
+}
+
+function queueDownload(url) {
+  dlQueue.push(url);
+  if (dlBusy) toast(`Na fila (${dlQueue.length})`);
+  else runDownloads();
+}
+
+async function runDownloads() {
+  dlBusy = true;
+  while (dlQueue.length) {
+    const url = dlQueue.shift();
+    $('dlText').textContent = 'Baixando do YouTube…' + (dlQueue.length ? ` (+${dlQueue.length} na fila)` : '');
+    $('dlBar').style.width = '0';
+    $('dl').classList.add('show');
+    try {
+      const r = await YT.download({ url });
+      $('dlText').textContent = 'Salvando…';
+      const t = await saveYoutubeTrack(r);
+      toast(t ? `Baixada: ${t.title}` : 'Essa música já está na biblioteca');
+    } catch (e) {
+      if (e && e.code !== 'CANCELED') toast((e && e.message) || 'Falha no download');
+    }
+  }
+  $('dl').classList.remove('show');
+  dlBusy = false;
+}
+
+function cleanYoutubeInfo(r) {
+  let title = r.track || r.title || 'Sem título';
+  let artist = r.artist || '';
+  if (!r.track && !artist) {
+    const m = title.match(/^(.+?)\s+[-–—|]\s+(.+)$/);
+    if (m) { artist = m[1]; title = m[2]; }
+  }
+  if (!artist) artist = (r.uploader || '').replace(/\s*-\s*Topic$/i, '').replace(/VEVO$/i, '');
+  title = title.replace(/\s*[(\[][^)\]]*\b(official|oficial|lyrics?|letra|audio|áudio|video|vídeo|clipe|clip|visualizer|hd|4k|mv)\b[^)\]]*[)\]]/gi, '').trim();
+  return { title: title || r.title, artist: artist.trim() || 'Artista desconhecido' };
+}
+
+async function saveYoutubeTrack(r) {
+  try {
+    if (tracks.some(t => t.ytId && t.ytId === r.id)) return null;
+    const file = await (await fetch(Capacitor.convertFileSrc(r.path))).blob();
+    const cover = r.cover ? await (await fetch(r.cover)).blob() : null;
+    const { title, artist } = cleanYoutubeInfo(r);
+    const t = {
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random(),
+      name: r.path.split('/').pop(), size: file.size, ytId: r.id,
+      title, artist, album: '', cover,
+      duration: r.duration || await durationOf(file),
+      fav: false, added: Date.now()
+    };
+    await put('files', file, t.id);
+    await put('tracks', t);
+    tracks.push(t);
+    if (view.type !== 'search') render();
+    return t;
+  } finally {
+    YT.deleteFile({ path: r.path }).catch(() => {});
+  }
+}
+
+if (YT) {
+  YT.addListener('progress', p => { $('dlBar').style.width = Math.max(0, Math.min(100, p.progress)) + '%'; });
+  YT.addListener('shared', d => {
+    const url = extractUrl(d.text);
+    if (url) queueDownload(url); else toast('Nenhum link no que foi compartilhado');
+  });
+  $('dlCancel').onclick = () => { dlQueue.length = 0; YT.cancel(); };
+}
+
 // ---------- Telas ----------
 function listFor(v) {
   let list;
@@ -426,7 +569,7 @@ function render() {
   let html = '';
   if (!tracks.length && view.type === 'all') {
     html = `<div class="empty"><h2>Sua biblioteca está vazia</h2>
-      <p>Adicione as músicas baixadas no seu celular ou computador (MP3, M4A, FLAC, OGG, WAV…).</p>
+      <p>Adicione as músicas baixadas no seu celular (MP3, M4A, FLAC, OGG, WAV…) ou baixe pelo link do YouTube.</p>
       <button class="pill" data-act="add">Adicionar músicas</button>
       ${isMobile() ? '' : '<br><button class="pill" data-act="folder" style="background:transparent;color:#fff;border:1px solid #777">Adicionar pasta</button>'}</div>`;
   } else {
@@ -586,7 +729,7 @@ async function createPlaylist() {
 $('main').addEventListener('click', async e => {
   const act = e.target.closest('[data-act]')?.dataset.act;
   const row = e.target.closest('.row');
-  if (act === 'add') return $('fileInput').click();
+  if (act === 'add') return addSheet();
   if (act === 'folder') return $('folderInput').click();
   if (act === 'playall') { const l = listFor(view); return playList(l, shuffle ? Math.floor(Math.random() * l.length) : 0); }
   if (act === 'plmenu') return playlistSheet(playlists.find(p => p.id === view.id));
@@ -610,7 +753,7 @@ document.querySelector('.tabs').addEventListener('click', e => {
   if (view.type === 'search') $('search').focus();
 });
 
-$('addBtn').onclick = () => $('fileInput').click();
+$('addBtn').onclick = addSheet;
 $('fileInput').onchange = e => { importFiles(e.target.files); e.target.value = ''; };
 $('folderInput').onchange = e => { importFiles(e.target.files); e.target.value = ''; };
 
@@ -725,7 +868,7 @@ addEventListener('drop', e => { e.preventDefault(); dragDepth = 0; document.body
 
 // ---------- Instalar como app ----------
 let installEvt = null;
-addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('installBtn').hidden = false; });
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); if (isNative) return; installEvt = e; $('installBtn').hidden = false; });
 addEventListener('appinstalled', () => { $('installBtn').hidden = true; toast('App instalado!'); });
 $('installBtn').onclick = async () => {
   if (installEvt) { installEvt.prompt(); await installEvt.userChoice; installEvt = null; $('installBtn').hidden = true; }

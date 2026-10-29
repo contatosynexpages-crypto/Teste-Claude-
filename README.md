@@ -14,6 +14,13 @@ Versões novas instalam por cima da anterior sem apagar suas músicas. No app An
 
 Para gerar o APK no seu computador: `npm install` e depois `npm run apk` (precisa do Android Studio / SDK do Android e do Java 17).
 
+## Baixar músicas do YouTube (app Android)
+
+- Toque em **+** → **Baixar do YouTube (link)**, cole o link e toque em **Baixar**; ou
+- No app do YouTube, toque em **Compartilhar** → **Minhas Músicas**.
+
+O áudio é baixado com o [yt-dlp](https://github.com/yt-dlp/yt-dlp) (via [youtubedl-android](https://github.com/yausername/youtubedl-android)), com título, artista e capa. O yt-dlp se atualiza sozinho uma vez por dia, porque o YouTube muda com frequência. Baixe apenas conteúdo que você tem direito de baixar.
+
 ## Instalar como app web (Android ou iPhone)
 
 O app precisa estar publicado num endereço `https://` (GitHub Pages, Vercel, Netlify…). Depois:
