@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Minhas Músicas</string>
+    <string name="title_activity_main">Minhas Músicas</string>
+    <string name="package_name">com.minhasmusicas.app</string>
+    <string name="custom_url_scheme">com.minhasmusicas.app</string>
+</resources>

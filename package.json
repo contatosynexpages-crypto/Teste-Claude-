@@ -1,0 +1,21 @@
+{
+  "name": "minhas-musicas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Player de música para as suas músicas baixadas",
+  "scripts": {
+    "build": "rm -rf www && mkdir -p www && cp -r index.html manifest.webmanifest sw.js icons www/",
+    "sync": "npm run build && npx cap sync android",
+    "apk": "npm run sync && cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/app": "^6.0.2",
+    "@capacitor/core": "^6.2.1",
+    "@jofr/capacitor-media-session": "^4.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.2.1"
+  }
+}

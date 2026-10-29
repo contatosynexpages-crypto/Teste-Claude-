@@ -1,0 +1,8 @@
+{
+  "appId": "com.minhasmusicas.app",
+  "appName": "Minhas Músicas",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#121212"
+  }
+}

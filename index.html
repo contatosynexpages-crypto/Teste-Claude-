@@ -467,12 +467,7 @@ async function playAt(i) {
   audio.play().catch(() => {});
   renderNow();
   markPlaying();
-  if ('mediaSession' in navigator) {
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: t.title, artist: t.artist, album: t.album,
-      artwork: t.cover ? [{ src: coverUrl(t), sizes: '512x512', type: t.cover.type }] : [{ src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }]
-    });
-  }
+  media.meta(t);
   document.title = `${t.title} · ${t.artist}`;
 }
 
@@ -654,12 +649,13 @@ audio.ontimeupdate = () => {
   $('miniBar').style.width = (p * 100) + '%';
   $('dur').textContent = fmt(audio.duration);
   if (!seeking) { $('cur').textContent = fmt(audio.currentTime); $('seek').value = p * 1000; }
-  if ('mediaSession' in navigator && navigator.mediaSession.setPositionState && audio.duration) {
-    try { navigator.mediaSession.setPositionState({ duration: audio.duration, position: audio.currentTime, playbackRate: 1 }); } catch (e) {}
-  }
 };
-const syncPlay = () => { const n = audio.paused ? 'play' : 'pause'; setIcon($('play'), n); setIcon($('miniPlay'), n); };
+const syncPlay = () => {
+  const n = audio.paused ? 'play' : 'pause'; setIcon($('play'), n); setIcon($('miniPlay'), n);
+  media.state(audio.paused ? 'paused' : 'playing'); media.pos();
+};
 audio.onplay = audio.onpause = syncPlay;
+audio.onseeked = audio.onloadedmetadata = () => media.pos();
 audio.onended = () => next(true);
 
 document.addEventListener('keydown', e => {
@@ -670,13 +666,54 @@ document.addEventListener('keydown', e => {
   else if (e.code === 'Escape') { closeSheet(); $('full').classList.remove('open'); }
 });
 
-if ('mediaSession' in navigator) {
-  const ms = navigator.mediaSession;
-  ms.setActionHandler('play', () => audio.play());
-  ms.setActionHandler('pause', () => audio.pause());
-  ms.setActionHandler('nexttrack', () => next(false));
-  ms.setActionHandler('previoustrack', prev);
-  try { ms.setActionHandler('seekto', d => { audio.currentTime = d.seekTime; }); } catch (e) {}
+// ---------- Controles do sistema (tela de bloqueio, notificação, fone) ----------
+// No app Android usa o plugin nativo, que também mantém a música tocando com a tela desligada.
+const isNative = !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
+const NativeMS = isNative && Capacitor.Plugins && Capacitor.Plugins.MediaSession;
+const blobToDataUrl = blob => new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res(null); r.readAsDataURL(blob); });
+const media = {
+  async meta(t) {
+    if (NativeMS) {
+      const art = t.cover ? await blobToDataUrl(t.cover) : null;
+      NativeMS.setMetadata({ title: t.title, artist: t.artist, album: t.album, artwork: art ? [{ src: art }] : [] }).catch(() => {});
+    } else if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: t.title, artist: t.artist, album: t.album,
+        artwork: t.cover ? [{ src: coverUrl(t), sizes: '512x512', type: t.cover.type }] : [{ src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }]
+      });
+    }
+  },
+  state(s) {
+    if (NativeMS) NativeMS.setPlaybackState({ playbackState: s }).catch(() => {});
+    else if ('mediaSession' in navigator) navigator.mediaSession.playbackState = s;
+  },
+  pos() {
+    if (!audio.duration || !isFinite(audio.duration)) return;
+    const st = { duration: audio.duration, position: Math.min(audio.currentTime, audio.duration), playbackRate: audio.paused ? 0 : 1 };
+    if (NativeMS) NativeMS.setPositionState(st).catch(() => {});
+    else if ('mediaSession' in navigator && navigator.mediaSession.setPositionState) {
+      try { navigator.mediaSession.setPositionState({ ...st, playbackRate: 1 }); } catch (e) {}
+    }
+  },
+  handler(action, fn) {
+    if (NativeMS) NativeMS.setActionHandler({ action }, fn);
+    else if ('mediaSession' in navigator) { try { navigator.mediaSession.setActionHandler(action, fn); } catch (e) {} }
+  }
+};
+media.handler('play', () => audio.play());
+media.handler('pause', () => audio.pause());
+media.handler('nexttrack', () => next(false));
+media.handler('previoustrack', prev);
+media.handler('seekto', d => { audio.currentTime = d.seekTime; });
+
+// Botão "voltar" do Android: fecha o que estiver aberto antes de sair
+if (isNative && Capacitor.Plugins.App) {
+  Capacitor.Plugins.App.addListener('backButton', () => {
+    if ($('sheet').classList.contains('open')) closeSheet();
+    else if ($('full').classList.contains('open')) $('full').classList.remove('open');
+    else if (view.type !== 'all') { view = { type: 'all' }; render(); }
+    else Capacitor.Plugins.App.minimizeApp();
+  });
 }
 
 // Arrastar e soltar (computador)
@@ -695,9 +732,9 @@ $('installBtn').onclick = async () => {
   else alert('No iPhone: toque em Compartilhar (□↑) e depois em "Adicionar à Tela de Início".');
 };
 const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !standalone) $('installBtn').hidden = false;
+if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !standalone && !isNative) $('installBtn').hidden = false;
 
-if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js');
+if ('serviceWorker' in navigator && location.protocol !== 'file:' && !isNative) navigator.serviceWorker.register('sw.js');
 
 // ---------- Início ----------
 (async () => {

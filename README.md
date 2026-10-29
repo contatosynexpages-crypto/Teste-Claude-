@@ -2,7 +2,19 @@
 
 App de música estilo Spotify para as suas músicas baixadas. Funciona no celular (Android e iPhone) e no computador, sem internet depois de instalado.
 
-## Instalar no celular
+## Instalar no Android (APK)
+
+A cada atualização enviada ao GitHub, o APK é gerado automaticamente e publicado na página **Releases** do repositório.
+
+1. No celular, abra a página **Releases** do repositório no GitHub e baixe o `MinhasMusicas.apk` da versão mais recente.
+2. Abra o arquivo baixado. Se o Android pedir, permita **instalar apps desta fonte**.
+3. Pronto: o ícone **Minhas Músicas** aparece na tela inicial.
+
+Versões novas instalam por cima da anterior sem apagar suas músicas. No app Android, a música continua tocando com a tela desligada e os controles aparecem na notificação e na tela de bloqueio.
+
+Para gerar o APK no seu computador: `npm install` e depois `npm run apk` (precisa do Android Studio / SDK do Android e do Java 17).
+
+## Instalar como app web (Android ou iPhone)
 
 O app precisa estar publicado num endereço `https://` (GitHub Pages, Vercel, Netlify…). Depois:
 
@@ -32,3 +44,5 @@ As músicas ficam guardadas dentro do app, então continuam lá quando você abr
 - `index.html` — o app inteiro
 - `manifest.webmanifest` + `icons/` — nome e ícone do app instalado
 - `sw.js` — faz o app abrir sem internet
+- `android/` — projeto Android (Capacitor) que empacota o `index.html` como APK
+- `.github/workflows/android.yml` — gera o APK automaticamente no GitHub
