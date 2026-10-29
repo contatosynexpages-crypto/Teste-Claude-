@@ -2,151 +2,224 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121212">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Músicas">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>Minhas Músicas</title>
 <style>
   :root {
-    --bg: #121212; --panel: #000; --card: #181818; --hover: #282828;
-    --text: #fff; --muted: #b3b3b3; --accent: #1db954;
+    --bg: #121212; --card: #1e1e1e; --hover: #2a2a2a; --line: #2a2a2a;
+    --text: #fff; --muted: #a7a7a7; --accent: #1db954;
+    --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--panel); color: var(--text); height: 100vh; overflow: hidden; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text);
+         overscroll-behavior: none; user-select: none; -webkit-user-select: none; }
   button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
-  .app { display: grid; grid-template-columns: 240px 1fr; grid-template-rows: 1fr 90px; height: 100vh; gap: 8px; padding: 8px 8px 0; }
+  input { font: inherit; user-select: text; -webkit-user-select: text; }
+  svg { width: 24px; height: 24px; fill: currentColor; display: block; }
 
-  /* Sidebar */
-  .sidebar { background: var(--bg); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
-  .logo { font-weight: 800; font-size: 20px; padding: 4px 8px 16px; white-space: nowrap; }
-  .logo span { color: var(--accent); }
-  .nav-item { text-align: left; padding: 10px 12px; border-radius: 6px; color: var(--muted); font-weight: 600; display: flex; gap: 10px; align-items: center; }
-  .nav-item:hover { color: var(--text); }
-  .nav-item.active { color: var(--text); background: var(--hover); }
-  .section-title { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; padding: 16px 12px 6px; display: flex; justify-content: space-between; align-items: center; }
-  .section-title button { font-size: 20px; color: var(--muted); }
-  .section-title button:hover { color: var(--text); }
+  .app { max-width: 720px; margin: 0 auto; min-height: 100%; position: relative; }
 
-  /* Main */
-  .main { background: linear-gradient(180deg, #1f3a2a 0, var(--bg) 280px); border-radius: 8px; overflow-y: auto; padding: 24px 28px; }
-  .header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
-  .header h1 { font-size: 40px; font-weight: 800; }
-  .header .sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
-  .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .btn { background: var(--accent); color: #000; font-weight: 700; padding: 10px 20px; border-radius: 999px; }
-  .btn:hover { transform: scale(1.04); }
-  .btn.ghost { background: transparent; color: var(--text); border: 1px solid #727272; }
-  .search { background: #242424; border: 1px solid transparent; color: var(--text); padding: 10px 16px; border-radius: 999px; width: 240px; font: inherit; }
-  .search:focus { outline: none; border-color: #fff; }
+  /* Topo */
+  .top { position: sticky; top: 0; z-index: 10; padding: calc(var(--safe-top) + 14px) 16px 10px;
+         background: linear-gradient(var(--bg) 70%, transparent); display: flex; align-items: center; gap: 12px; }
+  .top h1 { font-size: 24px; font-weight: 800; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .icon-btn { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; color: var(--text); flex-shrink: 0; }
+  .icon-btn:active { background: var(--hover); }
+  .pill { background: var(--accent); color: #000; font-weight: 700; padding: 8px 14px; border-radius: 999px; font-size: 14px; white-space: nowrap; }
 
-  .play-big { width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: #000; font-size: 22px; display: grid; place-items: center; }
-  .play-big:hover { transform: scale(1.06); }
+  /* Conteúdo */
+  main { padding: 0 8px calc(var(--safe-bottom) + 150px); }
+  .sub { color: var(--muted); font-size: 13px; padding: 0 8px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .play-big { width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: #000; display: grid; place-items: center; flex-shrink: 0; }
+  .play-big:active { transform: scale(.94); }
+  .search { width: 100%; background: #fff; color: #000; border: none; padding: 12px 16px; border-radius: 8px; font-size: 16px; margin: 0 0 12px; }
+  .search:focus { outline: none; }
+  .search-wrap { padding: 0 8px; }
 
-  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-  th { text-align: left; color: var(--muted); font-weight: 500; font-size: 13px; padding: 8px; border-bottom: 1px solid #2a2a2a; }
-  td { padding: 8px; font-size: 14px; color: var(--muted); vertical-align: middle; }
-  tr.row { cursor: default; }
-  tr.row:hover td { background: #2a2a2a; }
-  tr.row td:first-child { border-radius: 6px 0 0 6px; width: 40px; text-align: center; }
-  tr.row td:last-child { border-radius: 0 6px 6px 0; text-align: right; white-space: nowrap; }
-  tr.row.playing .t-title, tr.row.playing td:first-child { color: var(--accent); }
-  .t-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
-  .t-info img, .cover-ph { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
-  .cover-ph { background: #333; display: grid; place-items: center; color: #777; font-size: 18px; }
-  .t-title { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .t-artist { font-size: 13px; }
-  .row-btn { opacity: 0; padding: 4px 6px; color: var(--muted); }
-  tr.row:hover .row-btn, .row-btn.on { opacity: 1; }
-  .row-btn:hover { color: var(--text); }
-  .row-btn.on { color: var(--accent); }
+  .row { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 6px; }
+  .row:active { background: var(--hover); }
+  .row .meta { flex: 1; min-width: 0; }
+  .cover, .cover-ph { width: 48px; height: 48px; border-radius: 4px; object-fit: cover; flex-shrink: 0; background: #333; }
+  .cover-ph { display: grid; place-items: center; color: #777; }
+  .t-title { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .t-artist { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .row.playing .t-title { color: var(--accent); }
+  .row .more { color: var(--muted); width: 36px; height: 36px; display: grid; place-items: center; }
+  .fav-dot { color: var(--accent); }
+  .fav-dot svg { width: 16px; height: 16px; }
 
-  .empty { text-align: center; padding: 80px 20px; color: var(--muted); }
-  .empty h2 { color: var(--text); margin-bottom: 8px; }
-  .empty .btn { margin-top: 20px; }
-  .drop-hint { position: fixed; inset: 0; background: rgba(29,185,84,.15); border: 3px dashed var(--accent); display: none; place-items: center; font-size: 28px; font-weight: 800; z-index: 50; pointer-events: none; }
+  .pl-cover { width: 56px; height: 56px; border-radius: 4px; display: grid; place-items: center; background: linear-gradient(135deg, #450af5, #8e8ee5); flex-shrink: 0; }
+  .pl-cover.liked { background: linear-gradient(135deg, #450af5, #c4efd9); }
+  .pl-cover.new { background: var(--hover); color: var(--muted); }
+
+  .empty { text-align: center; padding: 60px 24px; color: var(--muted); line-height: 1.5; }
+  .empty h2 { color: var(--text); margin-bottom: 8px; font-size: 20px; }
+  .empty .pill { display: inline-block; margin-top: 20px; padding: 12px 24px; font-size: 15px; }
+
+  /* Mini player */
+  .mini { position: fixed; left: 8px; right: 8px; bottom: calc(var(--safe-bottom) + 64px); max-width: 704px; margin: 0 auto;
+          background: #3a2a1f; border-radius: 8px; padding: 8px; display: none; align-items: center; gap: 10px; z-index: 20; overflow: hidden; }
+  .mini.show { display: flex; }
+  .mini .cover, .mini .cover-ph { width: 40px; height: 40px; }
+  .mini .meta { flex: 1; min-width: 0; }
+  .mini .t-title { font-size: 14px; font-weight: 600; }
+  .mini .t-artist { font-size: 12px; color: #ddd; }
+  .mini-bar { position: absolute; left: 8px; right: 8px; bottom: 2px; height: 2px; background: rgba(255,255,255,.25); border-radius: 1px; }
+  .mini-bar i { display: block; height: 100%; width: 0; background: #fff; border-radius: 1px; }
+
+  /* Abas */
+  .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; justify-content: center;
+          padding: 6px 0 calc(var(--safe-bottom) + 6px); background: linear-gradient(transparent, rgba(0,0,0,.92) 30%); }
+  .tabs-inner { display: flex; width: 100%; max-width: 720px; }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); padding: 4px 0; }
+  .tab.active { color: var(--text); }
+
+  /* Player em tela cheia */
+  .full { position: fixed; inset: 0; z-index: 40; background: linear-gradient(180deg, #4a3526 0%, #121212 75%);
+          display: flex; flex-direction: column; padding: calc(var(--safe-top) + 10px) 24px calc(var(--safe-bottom) + 24px);
+          transform: translateY(100%); transition: transform .3s ease; }
+  .full.open { transform: none; }
+  .full-inner { max-width: 480px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  .full-top { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .full-art { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 0; min-height: 0; }
+  .full-art img, .full-art .cover-ph { width: 100%; max-width: 360px; aspect-ratio: 1; height: auto; max-height: 100%; object-fit: cover; border-radius: 8px; box-shadow: 0 8px 40px rgba(0,0,0,.5); }
+  .full-art .cover-ph svg { width: 30%; height: 30%; }
+  .full-info { display: flex; align-items: center; gap: 12px; }
+  .full-info .meta { flex: 1; min-width: 0; }
+  .full-info .t-title { font-size: 22px; font-weight: 700; }
+  .full-info .t-artist { font-size: 16px; }
+  .fav-btn.on { color: var(--accent); }
+  .seek-wrap { margin-top: 18px; }
+  .times { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 4px; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 2px; background: #555; outline: none; touch-action: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+  input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: none; }
+  .ctrls { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+  .ctrls .icon-btn svg { width: 30px; height: 30px; }
+  .ctrls .toggle { color: var(--text); position: relative; }
+  .ctrls .toggle svg { width: 24px; height: 24px; }
+  .ctrls .toggle.on { color: var(--accent); }
+  .ctrls .toggle.on::after { content: ""; position: absolute; bottom: 2px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--accent); }
+  .big-play { width: 66px; height: 66px; border-radius: 50%; background: #fff; color: #000; display: grid; place-items: center; }
+  .big-play svg { width: 30px; height: 30px; }
+  .big-play:active { transform: scale(.94); }
+
+  /* Folha de opções */
+  .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 50; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .backdrop.open { opacity: 1; pointer-events: auto; }
+  .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 51; background: #282828; border-radius: 12px 12px 0 0;
+           padding: 8px 8px calc(var(--safe-bottom) + 12px); max-width: 720px; margin: 0 auto; max-height: 80vh; overflow-y: auto;
+           transform: translateY(100%); transition: transform .25s ease; }
+  .sheet.open { transform: none; }
+  .sheet .handle { width: 36px; height: 4px; background: #555; border-radius: 2px; margin: 4px auto 12px; }
+  .sheet .head { display: flex; gap: 12px; align-items: center; padding: 0 8px 12px; border-bottom: 1px solid #3e3e3e; margin-bottom: 6px; }
+  .sheet .opt { display: flex; align-items: center; gap: 16px; width: 100%; text-align: left; padding: 14px 12px; border-radius: 6px; font-size: 15px; }
+  .sheet .opt:active { background: #3e3e3e; }
+  .sheet .opt.danger { color: #ff6b6b; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(var(--safe-bottom) + 140px); transform: translateX(-50%) translateY(20px);
+           background: #fff; color: #000; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; z-index: 60;
+           opacity: 0; transition: .25s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%); }
+
+  .drop-hint { position: fixed; inset: 0; background: rgba(29,185,84,.15); border: 3px dashed var(--accent); display: none;
+               place-items: center; font-size: 24px; font-weight: 800; z-index: 70; pointer-events: none; }
   body.dragging .drop-hint { display: grid; }
-
-  /* Player */
-  .player { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; padding: 0 12px; gap: 16px; }
-  .now { display: flex; align-items: center; gap: 12px; min-width: 0; }
-  .now img, .now .cover-ph { width: 56px; height: 56px; }
-  .now .t-title { font-size: 14px; }
-  .now .t-artist { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .controls { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .ctrl-row { display: flex; align-items: center; gap: 20px; }
-  .ctrl { color: var(--muted); font-size: 18px; }
-  .ctrl:hover { color: var(--text); }
-  .ctrl.on { color: var(--accent); position: relative; }
-  .ctrl.on::after { content: ""; position: absolute; left: 50%; bottom: -6px; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; transform: translateX(-50%); }
-  .play-btn { width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #000; display: grid; place-items: center; font-size: 14px; }
-  .play-btn:hover { transform: scale(1.06); }
-  .progress { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 600px; font-size: 12px; color: var(--muted); }
-  .progress span { width: 40px; text-align: center; }
-  input[type=range] { -webkit-appearance: none; appearance: none; flex: 1; height: 4px; border-radius: 2px; background: #4d4d4d; cursor: pointer; }
-  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #fff; }
-  input[type=range]::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: none; }
-  .right { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
-  .right input { max-width: 110px; }
-
-  /* Menu */
-  .menu { position: fixed; background: #282828; border-radius: 6px; padding: 4px; box-shadow: 0 16px 24px rgba(0,0,0,.5); z-index: 100; min-width: 200px; display: none; }
-  .menu button { display: block; width: 100%; text-align: left; padding: 10px 12px; border-radius: 4px; font-size: 14px; }
-  .menu button:hover { background: #3e3e3e; }
-  .menu hr { border: none; border-top: 1px solid #3e3e3e; margin: 4px 0; }
-
-  @media (max-width: 760px) {
-    .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; padding: 0; gap: 0; }
-    .sidebar { flex-direction: row; overflow-x: auto; border-radius: 0; padding: 8px; }
-    .logo, .section-title { display: none; }
-    .nav-item { white-space: nowrap; }
-    .main { border-radius: 0; padding: 16px; }
-    .header h1 { font-size: 28px; }
-    .search { width: 100%; }
-    .col-album, .col-hide { display: none; }
-    .player { grid-template-columns: 1fr; padding: 8px 12px; gap: 6px; background: #181818; }
-    .right { display: none; }
-    .row-btn { opacity: 1; }
-  }
 </style>
 </head>
 <body>
-<div class="drop-hint">Solte suas músicas aqui 🎵</div>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M12 3 2 11h3v10h5v-6h4v6h5V11h3z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><path d="M10 2a8 8 0 1 0 4.9 14.3l5.4 5.4 1.4-1.4-5.4-5.4A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12z"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2 0 3.5 1.1 4.3 2.4h2c.8-1.3 2.3-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></symbol>
+  <symbol id="i-heart-o" viewBox="0 0 24 24"><path d="M16.5 4.5c-1.8 0-3.4.9-4.5 2.3-1.1-1.4-2.7-2.3-4.5-2.3C4.4 4.5 2 7 2 10.1 2 15.3 12 21 12 21s10-5.7 10-10.9c0-3.1-2.4-5.6-5.5-5.6zM12 18.6C9.4 17 4 13.2 4 10.1 4 8.1 5.5 6.5 7.5 6.5c1.5 0 2.8 1 3.3 2.3h2.4c.5-1.3 1.8-2.3 3.3-2.3 2 0 3.5 1.6 3.5 3.6 0 3.1-5.4 6.9-8 8.5z"/></symbol>
+  <symbol id="i-lib" viewBox="0 0 24 24"><path d="M3 3h2v18H3zm5 0h2v18H8zm5.5.6 1.9-.6 5.6 17.4-1.9.6z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M6 4h4v16H6zm8 0h4v16h-4z"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M5 4v16l10-8zm11 0h3v16h-3z"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><path d="M19 4v16L9 12zM5 4h3v16H5z"/></symbol>
+  <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M17 3l4 4-4 4V8h-2.6l-8 9H3v-2h2.6l8-9H17zm0 10l4 4-4 4v-3h-3.4l-2.4-2.7 1.4-1.5 1.8 2.2H17zM3 7h3.4l2.3 2.6-1.3 1.5L5.6 9H3z"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z"/></symbol>
+  <symbol id="i-repeat1" viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2zm-4-2V9h-1l-2 1v1h1.5v4z"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M5.6 8.6 12 15l6.4-6.4L20 10l-8 8-8-8z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M9 3v11.6A4 4 0 1 0 11 18V7h8V3z"/></symbol>
+  <symbol id="i-queue" viewBox="0 0 24 24"><path d="M3 5h14v2H3zm0 4h14v2H3zm0 4h9v2H3zm12 0v8l6-4z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M9 3h6l1 2h4v2H4V5h4zM6 9h12l-1 12H7z"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M4 11h16v2H4z"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M3 17.3V21h3.8L17.8 9.9l-3.7-3.7zM20.7 7a1 1 0 0 0 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0l-1.8 1.8 3.7 3.7z"/></symbol>
+  <symbol id="i-install" viewBox="0 0 24 24"><path d="M11 3h2v9l3.3-3.3 1.4 1.4L12 15.8l-5.7-5.7 1.4-1.4L11 12zM4 18h16v2H4z"/></symbol>
+</svg>
+
+<div class="drop-hint">Solte suas músicas aqui</div>
+
 <div class="app">
-  <aside class="sidebar">
-    <div class="logo">🎧 Minhas <span>Músicas</span></div>
-    <button class="nav-item active" data-view="all">🏠 Início</button>
-    <button class="nav-item" data-view="fav">💚 Curtidas</button>
-    <div class="section-title">Playlists <button id="newPl" title="Nova playlist">+</button></div>
-    <div id="plList"></div>
-  </aside>
-
-  <main class="main" id="main"></main>
-
-  <footer class="player">
-    <div class="now" id="now"></div>
-    <div class="controls">
-      <div class="ctrl-row">
-        <button class="ctrl" id="shuffle" title="Aleatório">🔀</button>
-        <button class="ctrl" id="prev" title="Anterior">⏮</button>
-        <button class="play-btn" id="play" title="Tocar/Pausar">▶</button>
-        <button class="ctrl" id="next" title="Próxima">⏭</button>
-        <button class="ctrl" id="repeat" title="Repetir">🔁</button>
-      </div>
-      <div class="progress">
-        <span id="cur">0:00</span>
-        <input type="range" id="seek" min="0" max="1000" value="0">
-        <span id="dur">0:00</span>
-      </div>
-    </div>
-    <div class="right">
-      <button class="ctrl" id="mute">🔊</button>
-      <input type="range" id="vol" min="0" max="100" value="80">
-    </div>
-  </footer>
+  <header class="top">
+    <h1 id="title">Início</h1>
+    <button class="icon-btn" id="installBtn" hidden title="Instalar app"><svg><use href="#i-install"/></svg></button>
+    <button class="icon-btn" id="addBtn" title="Adicionar músicas"><svg><use href="#i-plus"/></svg></button>
+  </header>
+  <main id="main"></main>
 </div>
 
-<div class="menu" id="menu"></div>
-<input type="file" id="fileInput" accept="audio/*" multiple hidden>
+<div class="mini" id="mini">
+  <span id="miniArt"></span>
+  <div class="meta"><div class="t-title" id="miniTitle"></div><div class="t-artist" id="miniArtist"></div></div>
+  <button class="icon-btn fav-btn" id="miniFav"><svg><use href="#i-heart-o"/></svg></button>
+  <button class="icon-btn" id="miniPlay"><svg><use href="#i-play"/></svg></button>
+  <div class="mini-bar"><i id="miniBar"></i></div>
+</div>
+
+<nav class="tabs"><div class="tabs-inner">
+  <button class="tab active" data-tab="all"><svg><use href="#i-home"/></svg>Início</button>
+  <button class="tab" data-tab="search"><svg><use href="#i-search"/></svg>Buscar</button>
+  <button class="tab" data-tab="fav"><svg><use href="#i-heart"/></svg>Curtidas</button>
+  <button class="tab" data-tab="pls"><svg><use href="#i-lib"/></svg>Playlists</button>
+</div></nav>
+
+<section class="full" id="full">
+  <div class="full-inner">
+    <div class="full-top">
+      <button class="icon-btn" id="closeFull"><svg><use href="#i-down"/></svg></button>
+      <span>Tocando agora</span>
+      <button class="icon-btn" id="fullMore"><svg><use href="#i-more"/></svg></button>
+    </div>
+    <div class="full-art" id="fullArt"></div>
+    <div class="full-info">
+      <div class="meta"><div class="t-title" id="fullTitle"></div><div class="t-artist" id="fullArtist"></div></div>
+      <button class="icon-btn fav-btn" id="fullFav"><svg><use href="#i-heart-o"/></svg></button>
+    </div>
+    <div class="seek-wrap">
+      <input type="range" id="seek" min="0" max="1000" value="0">
+      <div class="times"><span id="cur">0:00</span><span id="dur">0:00</span></div>
+    </div>
+    <div class="ctrls">
+      <button class="icon-btn toggle" id="shuffle"><svg><use href="#i-shuffle"/></svg></button>
+      <button class="icon-btn" id="prev"><svg><use href="#i-prev"/></svg></button>
+      <button class="big-play" id="play"><svg><use href="#i-play"/></svg></button>
+      <button class="icon-btn" id="next"><svg><use href="#i-next"/></svg></button>
+      <button class="icon-btn toggle" id="repeat"><svg><use href="#i-repeat"/></svg></button>
+    </div>
+  </div>
+</section>
+
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet"></div>
+<div class="toast" id="toast"></div>
+
+<input type="file" id="fileInput" accept="audio/*,.mp3,.m4a,.aac,.flac,.ogg,.opus,.wav" multiple hidden>
 <input type="file" id="folderInput" webkitdirectory multiple hidden>
-<audio id="audio"></audio>
+<audio id="audio" preload="auto"></audio>
 
 <script>
 // ---------- Armazenamento (IndexedDB) ----------
@@ -226,9 +299,11 @@ async function readTags(file) {
 function durationOf(file) {
   return new Promise(res => {
     const a = new Audio(), url = URL.createObjectURL(file);
+    const done = d => { res(d || 0); URL.revokeObjectURL(url); };
     a.preload = 'metadata';
-    a.onloadedmetadata = () => { res(a.duration || 0); URL.revokeObjectURL(url); };
-    a.onerror = () => { res(0); URL.revokeObjectURL(url); };
+    a.onloadedmetadata = () => done(a.duration);
+    a.onerror = () => done(0);
+    setTimeout(() => done(0), 5000);
     a.src = url;
   });
 }
@@ -242,21 +317,30 @@ const audio = document.getElementById('audio');
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 const fmt = s => { s = Math.floor(s || 0); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
-const coverHtml = t => t && t.cover ? `<img src="${coverUrl(t)}" alt="">` : `<div class="cover-ph">♪</div>`;
+const icon = (name, cls = '') => `<svg class="${cls}"><use href="#i-${name}"/></svg>`;
+const setIcon = (el, name) => el.querySelector('use').setAttribute('href', '#i-' + name);
 function coverUrl(t) { return coverUrls[t.id] ||= URL.createObjectURL(t.cover); }
+const coverHtml = t => t && t.cover ? `<img class="cover" src="${coverUrl(t)}" alt="">` : `<div class="cover-ph">${icon('note')}</div>`;
+const current = () => queue[qIndex];
+const isMobile = () => matchMedia('(pointer: coarse)').matches;
+
+function toast(msg) {
+  const el = $('toast'); el.textContent = msg; el.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 1800);
+}
 
 // ---------- Importar músicas ----------
 async function importFiles(fileList) {
   const files = [...fileList].filter(f => f.type.startsWith('audio/') || /\.(mp3|m4a|aac|ogg|oga|opus|wav|flac|webm)$/i.test(f.name));
-  if (!files.length) return;
+  if (!files.length) { toast('Nenhum arquivo de áudio'); return; }
   const existing = new Set(tracks.map(t => t.name + '|' + t.size));
   let added = 0;
   for (const [n, f] of files.entries()) {
-    renderMain(`Importando ${n + 1} de ${files.length}…`);
+    renderLoading(`Importando ${n + 1} de ${files.length}…`);
     if (existing.has(f.name + '|' + f.size)) continue;
     const tags = await readTags(f);
     const base = f.name.replace(/\.[^.]+$/, '');
-    let [artist, title] = base.includes(' - ') ? base.split(' - ', 2) : ['', base];
+    const [artist, title] = base.includes(' - ') ? base.split(' - ', 2) : ['', base];
     const t = {
       id: crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random(),
       name: f.name, size: f.size,
@@ -272,93 +356,93 @@ async function importFiles(fileList) {
     tracks.push(t);
     added++;
   }
-  renderMain();
-  renderSidebar();
+  render();
+  toast(added ? `${added} música${added > 1 ? 's' : ''} adicionada${added > 1 ? 's' : ''}` : 'Essas músicas já estão na biblioteca');
 }
 
-// ---------- Visões ----------
-function currentList() {
+// ---------- Telas ----------
+function listFor(v) {
   let list;
-  if (view.type === 'fav') list = tracks.filter(t => t.fav);
-  else if (view.type === 'pl') {
-    const pl = playlists.find(p => p.id === view.id);
+  if (v.type === 'fav') list = tracks.filter(t => t.fav);
+  else if (v.type === 'pl') {
+    const pl = playlists.find(p => p.id === v.id);
     list = pl ? pl.tracks.map(id => tracks.find(t => t.id === id)).filter(Boolean) : [];
   } else list = [...tracks].sort((a, b) => a.title.localeCompare(b.title));
-  if (query) {
-    const q = query.toLowerCase();
-    list = list.filter(t => (t.title + ' ' + t.artist + ' ' + t.album).toLowerCase().includes(q));
+  if (v.type === 'search') {
+    const q = query.trim().toLowerCase();
+    list = q ? list.filter(t => (t.title + ' ' + t.artist + ' ' + t.album).toLowerCase().includes(q)) : [];
   }
   return list;
 }
 
-function renderSidebar() {
-  document.querySelectorAll('.nav-item[data-view]').forEach(b => b.classList.toggle('active', view.type === b.dataset.view));
-  $('plList').innerHTML = playlists.map(p =>
-    `<button class="nav-item ${view.type === 'pl' && view.id === p.id ? 'active' : ''}" data-pl="${p.id}">🎶 ${esc(p.name)}</button>`
-  ).join('');
+function trackRows(list) {
+  const cur = current();
+  return list.map((t, i) => `
+    <div class="row ${cur && cur.id === t.id ? 'playing' : ''}" data-i="${i}" data-id="${t.id}">
+      ${coverHtml(t)}
+      <div class="meta"><div class="t-title">${esc(t.title)}</div>
+        <div class="t-artist">${t.fav ? `<span class="fav-dot">♥</span> ` : ''}${esc(t.artist)}${t.duration ? ' · ' + fmt(t.duration) : ''}</div></div>
+      <button class="more" data-act="more">${icon('more')}</button>
+    </div>`).join('');
 }
 
-function renderMain(loading) {
+function renderLoading(msg) { $('main').innerHTML = `<div class="empty"><h2>${msg}</h2></div>`; }
+
+function render() {
   const main = $('main');
-  if (loading) { main.innerHTML = `<div class="empty"><h2>${loading}</h2></div>`; return; }
-  const list = currentList();
+  const tabFor = view.type === 'pl' ? 'pls' : view.type;
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tabFor));
   const pl = view.type === 'pl' ? playlists.find(p => p.id === view.id) : null;
-  const title = view.type === 'fav' ? 'Músicas Curtidas' : pl ? pl.name : 'Sua Biblioteca';
+  $('title').textContent = { all: 'Sua Biblioteca', search: 'Buscar', fav: 'Curtidas', pls: 'Playlists' }[view.type] || (pl ? pl.name : '');
+  $('addBtn').hidden = view.type !== 'all';
+
+  if (view.type === 'pls') {
+    main.innerHTML = `
+      <div class="row" data-act="newpl"><div class="pl-cover new">${icon('plus')}</div>
+        <div class="meta"><div class="t-title">Criar playlist</div></div></div>
+      <div class="row" data-go="fav"><div class="pl-cover liked">${icon('heart')}</div>
+        <div class="meta"><div class="t-title">Músicas Curtidas</div><div class="t-artist">${tracks.filter(t => t.fav).length} músicas</div></div></div>
+      ${playlists.map(p => `
+        <div class="row" data-pl="${p.id}"><div class="pl-cover">${icon('note')}</div>
+          <div class="meta"><div class="t-title">${esc(p.name)}</div><div class="t-artist">Playlist · ${p.tracks.length} músicas</div></div></div>`).join('')}`;
+    return;
+  }
+
+  if (view.type === 'search') {
+    const had = document.activeElement && document.activeElement.id === 'search';
+    if (!$('search')) main.innerHTML = `<div class="search-wrap"><input class="search" id="search" type="search" placeholder="O que você quer ouvir?" enterkeyhint="search"></div><div id="results"></div>`;
+    const s = $('search'); s.value = query;
+    s.oninput = () => { query = s.value; render(); };
+    const list = listFor(view);
+    $('results').innerHTML = query.trim()
+      ? (list.length ? trackRows(list) : `<div class="empty">Nada encontrado para "${esc(query)}".</div>`)
+      : `<div class="empty">Busque por música, artista ou álbum.</div>`;
+    if (had) s.focus();
+    return;
+  }
+
+  const list = listFor(view);
   const totalDur = list.reduce((s, t) => s + (t.duration || 0), 0);
-
-  let html = `
-    <div class="header">
-      <div>
-        <h1>${esc(title)}</h1>
-        <div class="sub">${list.length} música${list.length === 1 ? '' : 's'} · ${Math.round(totalDur / 60)} min</div>
-      </div>
-      <div class="actions">
-        <input class="search" id="search" placeholder="🔍 Buscar música, artista…" value="${esc(query)}">
-        ${view.type === 'all' ? `
-          <button class="btn" id="addFiles">+ Adicionar músicas</button>
-          <button class="btn ghost" id="addFolder">📁 Pasta</button>` : ''}
-        ${pl ? `<button class="btn ghost" id="renamePl">Renomear</button><button class="btn ghost" id="deletePl">Excluir</button>` : ''}
-      </div>
-    </div>`;
-
-  if (!tracks.length) {
-    html += `<div class="empty"><h2>Sua biblioteca está vazia</h2>
-      <p>Adicione suas músicas baixadas (MP3, M4A, FLAC, OGG, WAV…) ou arraste os arquivos para cá.</p>
-      <button class="btn" id="addFiles2">+ Adicionar músicas</button></div>`;
-  } else if (!list.length) {
-    html += `<div class="empty"><p>${query ? 'Nada encontrado.' : view.type === 'fav' ? 'Curta músicas clicando no 🤍.' : 'Playlist vazia. Use o menu ⋯ de uma música para adicionar.'}</p></div>`;
+  let html = '';
+  if (!tracks.length && view.type === 'all') {
+    html = `<div class="empty"><h2>Sua biblioteca está vazia</h2>
+      <p>Adicione as músicas baixadas no seu celular ou computador (MP3, M4A, FLAC, OGG, WAV…).</p>
+      <button class="pill" data-act="add">Adicionar músicas</button>
+      ${isMobile() ? '' : '<br><button class="pill" data-act="folder" style="background:transparent;color:#fff;border:1px solid #777">Adicionar pasta</button>'}</div>`;
   } else {
-    const cur = queue[qIndex];
-    html += `<button class="play-big" id="playAll" title="Tocar tudo">▶</button>
-      <table><thead><tr><th>#</th><th>Título</th><th class="col-album">Álbum</th><th style="text-align:right">⏱</th></tr></thead><tbody>
-      ${list.map((t, i) => `
-        <tr class="row ${cur && cur.id === t.id ? 'playing' : ''}" data-i="${i}" data-id="${t.id}">
-          <td>${cur && cur.id === t.id && !audio.paused ? '▶' : i + 1}</td>
-          <td><div class="t-info">${coverHtml(t)}<div style="min-width:0">
-            <div class="t-title">${esc(t.title)}</div><div class="t-artist">${esc(t.artist)}</div></div></div></td>
-          <td class="col-album">${esc(t.album)}</td>
-          <td><button class="row-btn ${t.fav ? 'on' : ''}" data-act="fav">${t.fav ? '💚' : '🤍'}</button>
-            <span class="col-hide">${fmt(t.duration)}</span>
-            <button class="row-btn" data-act="menu">⋯</button></td>
-        </tr>`).join('')}
-      </tbody></table>`;
+    html = `<div class="sub"><span>${list.length} música${list.length === 1 ? '' : 's'} · ${Math.round(totalDur / 60)} min</span>
+      <span style="display:flex;gap:4px;align-items:center">
+        ${pl ? `<button class="icon-btn" data-act="plmenu">${icon('more')}</button>` : ''}
+        ${list.length ? `<button class="play-big" data-act="playall">${icon('play')}</button>` : ''}</span></div>`;
+    html += list.length ? trackRows(list)
+      : `<div class="empty">${view.type === 'fav' ? 'Toque no ♡ de uma música para curtir.' : 'Playlist vazia. Use o menu ⋮ de uma música para adicionar aqui.'}</div>`;
   }
   main.innerHTML = html;
+}
 
-  const s = $('search');
-  s.oninput = () => { query = s.value; const pos = s.selectionStart; renderMain(); const n = $('search'); n.focus(); n.setSelectionRange(pos, pos); };
-  for (const id of ['addFiles', 'addFiles2']) if ($(id)) $(id).onclick = () => $('fileInput').click();
-  if ($('addFolder')) $('addFolder').onclick = () => $('folderInput').click();
-  if ($('playAll')) $('playAll').onclick = () => playList(list, shuffle ? Math.floor(Math.random() * list.length) : 0);
-  if ($('renamePl')) $('renamePl').onclick = async () => {
-    const n = prompt('Novo nome:', pl.name); if (!n) return;
-    pl.name = n.trim(); await put('playlists', pl); renderSidebar(); renderMain();
-  };
-  if ($('deletePl')) $('deletePl').onclick = async () => {
-    if (!confirm(`Excluir a playlist "${pl.name}"?`)) return;
-    await del('playlists', pl.id); playlists = playlists.filter(p => p !== pl);
-    view = { type: 'all' }; renderSidebar(); renderMain();
-  };
+function markPlaying() {
+  const cur = current();
+  document.querySelectorAll('.row[data-id]').forEach(r => r.classList.toggle('playing', !!cur && r.dataset.id === cur.id));
 }
 
 // ---------- Reprodução ----------
@@ -366,7 +450,7 @@ function playList(list, i) {
   queue = [...list];
   if (shuffle) {
     const first = queue.splice(i, 1)[0];
-    queue.sort(() => Math.random() - 0.5);
+    for (let k = queue.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [queue[k], queue[j]] = [queue[j], queue[k]]; }
     queue.unshift(first); i = 0;
   }
   playAt(i);
@@ -377,16 +461,16 @@ async function playAt(i) {
   qIndex = i;
   const t = queue[i];
   const file = await getFile(t.id);
-  if (!file) { alert('Arquivo não encontrado.'); return; }
+  if (!file) { toast('Arquivo não encontrado'); return; }
   if (audio.src) URL.revokeObjectURL(audio.src);
   audio.src = URL.createObjectURL(file);
-  await audio.play().catch(() => {});
+  audio.play().catch(() => {});
   renderNow();
-  renderMain();
+  markPlaying();
   if ('mediaSession' in navigator) {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: t.title, artist: t.artist, album: t.album,
-      artwork: t.cover ? [{ src: coverUrl(t) }] : []
+      artwork: t.cover ? [{ src: coverUrl(t), sizes: '512x512', type: t.cover.type }] : [{ src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }]
     });
   }
   document.title = `${t.title} · ${t.artist}`;
@@ -404,124 +488,178 @@ function prev() {
   playAt(qIndex - 1);
 }
 function togglePlay() {
-  if (!audio.src) { const l = currentList(); if (l.length) playList(l, 0); return; }
+  if (!audio.src) { const l = listFor({ type: 'all' }); if (l.length) playList(l, 0); return; }
   audio.paused ? audio.play() : audio.pause();
 }
 
 function renderNow() {
-  const t = queue[qIndex];
-  $('now').innerHTML = t ? `${coverHtml(t)}<div style="min-width:0"><div class="t-title">${esc(t.title)}</div><div class="t-artist">${esc(t.artist)}</div></div>
-    <button class="row-btn ${t.fav ? 'on' : ''}" style="opacity:1" id="nowFav">${t.fav ? '💚' : '🤍'}</button>` : '';
-  if ($('nowFav')) $('nowFav').onclick = () => toggleFav(t);
+  const t = current();
+  $('mini').classList.toggle('show', !!t);
+  if (!t) return;
+  $('miniArt').innerHTML = coverHtml(t);
+  $('miniTitle').textContent = $('fullTitle').textContent = t.title;
+  $('miniArtist').textContent = $('fullArtist').textContent = t.artist;
+  $('fullArt').innerHTML = t.cover ? `<img src="${coverUrl(t)}" alt="">` : `<div class="cover-ph">${icon('note')}</div>`;
+  for (const id of ['miniFav', 'fullFav']) { setIcon($(id), t.fav ? 'heart' : 'heart-o'); $(id).classList.toggle('on', t.fav); }
 }
 
 async function toggleFav(t) {
-  t.fav = !t.fav; await put('tracks', t); renderMain(); renderNow();
+  t.fav = !t.fav; await put('tracks', t);
+  toast(t.fav ? 'Adicionada às Curtidas' : 'Removida das Curtidas');
+  renderNow(); if (view.type !== 'search') render(); else markPlaying();
 }
 
-// ---------- Menu de contexto ----------
-function openMenu(x, y, t) {
-  const m = $('menu');
-  m.innerHTML = `
-    <button data-m="next">⏭ Tocar em seguida</button>
-    <hr>
-    ${playlists.map(p => `<button data-m="add" data-pl="${p.id}">➕ Adicionar a "${esc(p.name)}"</button>`).join('')}
-    <button data-m="newpl">➕ Nova playlist com esta música</button>
-    ${view.type === 'pl' ? '<button data-m="rmpl">➖ Remover desta playlist</button>' : ''}
-    <hr>
-    <button data-m="del">🗑 Excluir da biblioteca</button>`;
-  m.style.display = 'block';
-  m.style.left = Math.min(x, innerWidth - m.offsetWidth - 8) + 'px';
-  m.style.top = Math.min(y, innerHeight - m.offsetHeight - 8) + 'px';
-  m.onclick = async e => {
-    const b = e.target.closest('button'); if (!b) return;
-    m.style.display = 'none';
-    const act = b.dataset.m;
+// ---------- Folha de opções ----------
+function openSheet(html) {
+  $('sheet').innerHTML = `<div class="handle"></div>` + html;
+  $('sheet').classList.add('open'); $('backdrop').classList.add('open');
+}
+function closeSheet() { $('sheet').classList.remove('open'); $('backdrop').classList.remove('open'); }
+$('backdrop').onclick = closeSheet;
+
+function trackSheet(t) {
+  const opt = (act, ic, label, cls = '') => `<button class="opt ${cls}" data-s="${act}">${icon(ic)}${label}</button>`;
+  openSheet(`
+    <div class="head">${coverHtml(t)}<div class="meta" style="min-width:0"><div class="t-title">${esc(t.title)}</div><div class="t-artist">${esc(t.artist)}</div></div></div>
+    ${opt('fav', t.fav ? 'heart' : 'heart-o', t.fav ? 'Remover das Curtidas' : 'Curtir')}
+    ${opt('next', 'queue', 'Tocar em seguida')}
+    ${opt('addpl', 'plus', 'Adicionar à playlist')}
+    ${view.type === 'pl' ? opt('rmpl', 'minus', 'Remover desta playlist') : ''}
+    ${opt('del', 'trash', 'Excluir do app', 'danger')}`);
+  $('sheet').onclick = async e => {
+    const b = e.target.closest('[data-s]'); if (!b) return;
+    const act = b.dataset.s;
+    if (act === 'addpl') return playlistPicker(t);
+    closeSheet();
+    if (act === 'fav') return toggleFav(t);
     if (act === 'next') {
-      if (!queue.length) { playList([t], 0); return; }
-      queue.splice(qIndex + 1, 0, t);
-    } else if (act === 'add') {
-      const p = playlists.find(p => p.id === b.dataset.pl);
-      if (!p.tracks.includes(t.id)) { p.tracks.push(t.id); await put('playlists', p); }
-    } else if (act === 'newpl') {
-      const p = await createPlaylist(); if (p) { p.tracks.push(t.id); await put('playlists', p); }
+      if (!queue.length) playList([t], 0); else queue.splice(qIndex + 1, 0, t);
+      toast('Vai tocar em seguida');
     } else if (act === 'rmpl') {
       const p = playlists.find(p => p.id === view.id);
-      p.tracks = p.tracks.filter(id => id !== t.id); await put('playlists', p);
+      p.tracks = p.tracks.filter(id => id !== t.id); await put('playlists', p); render();
     } else if (act === 'del') {
-      if (!confirm(`Excluir "${t.title}" da biblioteca?`)) return;
+      if (!confirm(`Excluir "${t.title}" do app?`)) return;
       await del('tracks', t.id); await del('files', t.id);
       tracks = tracks.filter(x => x !== t);
       for (const p of playlists) if (p.tracks.includes(t.id)) { p.tracks = p.tracks.filter(id => id !== t.id); await put('playlists', p); }
+      render(); toast('Música excluída');
     }
-    renderMain();
   };
 }
-document.addEventListener('click', e => { if (!e.target.closest('#menu') && !e.target.closest('[data-act=menu]')) $('menu').style.display = 'none'; });
+
+function playlistPicker(t) {
+  openSheet(`<div class="head"><div class="t-title">Adicionar à playlist</div></div>
+    <button class="opt" data-p="new">${icon('plus')}Nova playlist</button>
+    ${playlists.map(p => `<button class="opt" data-p="${p.id}">${icon('note')}${esc(p.name)}</button>`).join('')}`);
+  $('sheet').onclick = async e => {
+    const b = e.target.closest('[data-p]'); if (!b) return;
+    closeSheet();
+    const p = b.dataset.p === 'new' ? await createPlaylist() : playlists.find(p => p.id === b.dataset.p);
+    if (!p) return;
+    if (!p.tracks.includes(t.id)) { p.tracks.push(t.id); await put('playlists', p); }
+    toast(`Adicionada a "${p.name}"`);
+  };
+}
+
+function playlistSheet(p) {
+  openSheet(`<div class="head"><div class="t-title">${esc(p.name)}</div></div>
+    <button class="opt" data-s="rename">${icon('edit')}Renomear</button>
+    <button class="opt danger" data-s="delete">${icon('trash')}Excluir playlist</button>`);
+  $('sheet').onclick = async e => {
+    const b = e.target.closest('[data-s]'); if (!b) return;
+    closeSheet();
+    if (b.dataset.s === 'rename') {
+      const n = prompt('Novo nome:', p.name); if (!n || !n.trim()) return;
+      p.name = n.trim(); await put('playlists', p); render();
+    } else if (confirm(`Excluir a playlist "${p.name}"?`)) {
+      await del('playlists', p.id); playlists = playlists.filter(x => x !== p);
+      view = { type: 'pls' }; render();
+    }
+  };
+}
 
 async function createPlaylist() {
   const name = prompt('Nome da playlist:', `Minha playlist nº ${playlists.length + 1}`);
-  if (!name) return null;
+  if (!name || !name.trim()) return null;
   const p = { id: 'pl-' + Date.now(), name: name.trim(), tracks: [] };
-  await put('playlists', p); playlists.push(p); renderSidebar();
+  await put('playlists', p); playlists.push(p);
   return p;
 }
 
 // ---------- Eventos ----------
-$('main').addEventListener('click', e => {
-  const row = e.target.closest('tr.row'); if (!row) return;
-  const t = tracks.find(t => t.id === row.dataset.id);
+$('main').addEventListener('click', async e => {
   const act = e.target.closest('[data-act]')?.dataset.act;
-  if (act === 'fav') toggleFav(t);
-  else if (act === 'menu') { e.stopPropagation(); const r = e.target.getBoundingClientRect(); openMenu(r.left - 180, r.bottom, t); }
-});
-$('main').addEventListener('dblclick', e => {
-  const row = e.target.closest('tr.row'); if (!row || e.target.closest('[data-act]')) return;
-  playList(currentList(), +row.dataset.i);
+  const row = e.target.closest('.row');
+  if (act === 'add') return $('fileInput').click();
+  if (act === 'folder') return $('folderInput').click();
+  if (act === 'playall') { const l = listFor(view); return playList(l, shuffle ? Math.floor(Math.random() * l.length) : 0); }
+  if (act === 'plmenu') return playlistSheet(playlists.find(p => p.id === view.id));
+  if (act === 'newpl') { const p = await createPlaylist(); if (p) { view = { type: 'pl', id: p.id }; render(); } return; }
+  if (!row) return;
+  if (row.dataset.go) { view = { type: row.dataset.go }; return render(); }
+  if (row.dataset.pl) { view = { type: 'pl', id: row.dataset.pl }; return render(); }
+  const t = tracks.find(t => t.id === row.dataset.id);
+  if (act === 'more') return trackSheet(t);
+  if (row.dataset.id) playList(listFor(view), +row.dataset.i);
 });
 $('main').addEventListener('contextmenu', e => {
-  const row = e.target.closest('tr.row'); if (!row) return;
-  e.preventDefault(); openMenu(e.clientX, e.clientY, tracks.find(t => t.id === row.dataset.id));
-});
-// No celular, um toque já toca a música
-$('main').addEventListener('click', e => {
-  if (matchMedia('(max-width: 760px)').matches) {
-    const row = e.target.closest('tr.row'); if (!row || e.target.closest('[data-act]')) return;
-    playList(currentList(), +row.dataset.i);
-  }
+  const row = e.target.closest('.row[data-id]'); if (!row) return;
+  e.preventDefault(); trackSheet(tracks.find(t => t.id === row.dataset.id));
 });
 
-document.querySelector('.sidebar').addEventListener('click', e => {
-  const b = e.target.closest('.nav-item'); if (!b) return;
-  view = b.dataset.pl ? { type: 'pl', id: b.dataset.pl } : { type: b.dataset.view };
-  query = ''; renderSidebar(); renderMain();
+document.querySelector('.tabs').addEventListener('click', e => {
+  const b = e.target.closest('.tab'); if (!b) return;
+  view = { type: b.dataset.tab };
+  render(); scrollTo(0, 0);
+  if (view.type === 'search') $('search').focus();
 });
-$('newPl').onclick = async () => { const p = await createPlaylist(); if (p) { view = { type: 'pl', id: p.id }; renderSidebar(); renderMain(); } };
 
+$('addBtn').onclick = () => $('fileInput').click();
 $('fileInput').onchange = e => { importFiles(e.target.files); e.target.value = ''; };
 $('folderInput').onchange = e => { importFiles(e.target.files); e.target.value = ''; };
+
+$('mini').onclick = e => {
+  if (e.target.closest('#miniPlay')) return togglePlay();
+  if (e.target.closest('#miniFav')) return toggleFav(current());
+  $('full').classList.add('open');
+};
+$('closeFull').onclick = () => $('full').classList.remove('open');
+$('fullFav').onclick = () => toggleFav(current());
+$('fullMore').onclick = () => current() && trackSheet(current());
+// Arrastar para baixo fecha o player
+let touchY = null;
+$('full').addEventListener('touchstart', e => { if (!e.target.closest('input')) touchY = e.touches[0].clientY; }, { passive: true });
+$('full').addEventListener('touchend', e => {
+  if (touchY !== null && e.changedTouches[0].clientY - touchY > 100) $('full').classList.remove('open');
+  touchY = null;
+});
 
 $('play').onclick = togglePlay;
 $('next').onclick = () => next(false);
 $('prev').onclick = prev;
-$('shuffle').onclick = () => { shuffle = !shuffle; $('shuffle').classList.toggle('on', shuffle); };
+$('shuffle').onclick = () => { shuffle = !shuffle; $('shuffle').classList.toggle('on', shuffle); toast(shuffle ? 'Aleatório ligado' : 'Aleatório desligado'); };
 $('repeat').onclick = () => {
   repeat = repeat === 'off' ? 'all' : repeat === 'all' ? 'one' : 'off';
-  $('repeat').textContent = repeat === 'one' ? '🔂' : '🔁';
+  setIcon($('repeat'), repeat === 'one' ? 'repeat1' : 'repeat');
   $('repeat').classList.toggle('on', repeat !== 'off');
+  toast({ off: 'Repetir desligado', all: 'Repetir tudo', one: 'Repetir esta música' }[repeat]);
 };
-$('seek').oninput = () => { if (audio.duration) audio.currentTime = $('seek').value / 1000 * audio.duration; };
-$('vol').oninput = () => { audio.volume = $('vol').value / 100; audio.muted = false; updateMute(); localStorage.setItem('vol', $('vol').value); };
-$('mute').onclick = () => { audio.muted = !audio.muted; updateMute(); };
-function updateMute() { $('mute').textContent = audio.muted || audio.volume === 0 ? '🔇' : audio.volume < .5 ? '🔉' : '🔊'; }
+let seeking = false;
+$('seek').oninput = () => { seeking = true; $('cur').textContent = fmt($('seek').value / 1000 * (audio.duration || 0)); };
+$('seek').onchange = () => { if (audio.duration) audio.currentTime = $('seek').value / 1000 * audio.duration; seeking = false; };
 
 audio.ontimeupdate = () => {
-  $('cur').textContent = fmt(audio.currentTime);
+  const p = audio.duration ? audio.currentTime / audio.duration : 0;
+  $('miniBar').style.width = (p * 100) + '%';
   $('dur').textContent = fmt(audio.duration);
-  if (audio.duration) $('seek').value = audio.currentTime / audio.duration * 1000;
+  if (!seeking) { $('cur').textContent = fmt(audio.currentTime); $('seek').value = p * 1000; }
+  if ('mediaSession' in navigator && navigator.mediaSession.setPositionState && audio.duration) {
+    try { navigator.mediaSession.setPositionState({ duration: audio.duration, position: audio.currentTime, playbackRate: 1 }); } catch (e) {}
+  }
 };
-audio.onplay = () => { $('play').textContent = '⏸'; renderMain(); };
-audio.onpause = () => { $('play').textContent = '▶'; renderMain(); };
+const syncPlay = () => { const n = audio.paused ? 'play' : 'pause'; setIcon($('play'), n); setIcon($('miniPlay'), n); };
+audio.onplay = audio.onpause = syncPlay;
 audio.onended = () => next(true);
 
 document.addEventListener('keydown', e => {
@@ -529,32 +667,45 @@ document.addEventListener('keydown', e => {
   if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
   else if (e.code === 'ArrowRight' && e.shiftKey) next(false);
   else if (e.code === 'ArrowLeft' && e.shiftKey) prev();
+  else if (e.code === 'Escape') { closeSheet(); $('full').classList.remove('open'); }
 });
 
 if ('mediaSession' in navigator) {
-  navigator.mediaSession.setActionHandler('play', () => audio.play());
-  navigator.mediaSession.setActionHandler('pause', () => audio.pause());
-  navigator.mediaSession.setActionHandler('nexttrack', () => next(false));
-  navigator.mediaSession.setActionHandler('previoustrack', prev);
+  const ms = navigator.mediaSession;
+  ms.setActionHandler('play', () => audio.play());
+  ms.setActionHandler('pause', () => audio.pause());
+  ms.setActionHandler('nexttrack', () => next(false));
+  ms.setActionHandler('previoustrack', prev);
+  try { ms.setActionHandler('seekto', d => { audio.currentTime = d.seekTime; }); } catch (e) {}
 }
 
-// Arrastar e soltar
+// Arrastar e soltar (computador)
 let dragDepth = 0;
 addEventListener('dragenter', e => { e.preventDefault(); dragDepth++; document.body.classList.add('dragging'); });
 addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('dragging'); } });
 addEventListener('dragover', e => e.preventDefault());
 addEventListener('drop', e => { e.preventDefault(); dragDepth = 0; document.body.classList.remove('dragging'); importFiles(e.dataTransfer.files); });
 
+// ---------- Instalar como app ----------
+let installEvt = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('installBtn').hidden = false; });
+addEventListener('appinstalled', () => { $('installBtn').hidden = true; toast('App instalado!'); });
+$('installBtn').onclick = async () => {
+  if (installEvt) { installEvt.prompt(); await installEvt.userChoice; installEvt = null; $('installBtn').hidden = true; }
+  else alert('No iPhone: toque em Compartilhar (□↑) e depois em "Adicionar à Tela de Início".');
+};
+const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !standalone) $('installBtn').hidden = false;
+
+if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js');
+
 // ---------- Início ----------
 (async () => {
-  try { const v = localStorage.getItem('vol'); if (v) $('vol').value = v; } catch (e) {}
-  audio.volume = $('vol').value / 100;
   db = await openDB();
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
   tracks = await getAll('tracks');
   playlists = await getAll('playlists');
-  renderSidebar();
-  renderMain();
+  render();
 })();
 </script>
 </body>
