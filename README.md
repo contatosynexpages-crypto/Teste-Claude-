@@ -6,7 +6,7 @@ App de música estilo Spotify para as suas músicas baixadas. Funciona no celula
 
 A cada atualização enviada ao GitHub, o APK é gerado automaticamente e publicado na página **Releases** do repositório.
 
-1. No celular, abra a página **Releases** do repositório no GitHub e baixe o `MinhasMusicas.apk` da versão mais recente.
+1. No celular, abra a página **Releases** do repositório no GitHub e baixe o `MinhasMusicas.apk` da versão mais recente (celulares antigos de 32 bits: `MinhasMusicas-32bits.apk`).
 2. Abra o arquivo baixado. Se o Android pedir, permita **instalar apps desta fonte**.
 3. Pronto: o ícone **Minhas Músicas** aparece na tela inicial.
 

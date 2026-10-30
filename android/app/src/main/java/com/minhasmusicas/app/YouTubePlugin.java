@@ -13,7 +13,6 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
-import com.yausername.ffmpeg.FFmpeg;
 import com.yausername.youtubedl_android.YoutubeDL;
 import com.yausername.youtubedl_android.YoutubeDLRequest;
 import com.yausername.youtubedl_android.YoutubeDLResponse;
@@ -72,7 +71,6 @@ public class YouTubePlugin extends Plugin {
         if (ready) return true;
         try {
             YoutubeDL.getInstance().init(getContext());
-            FFmpeg.getInstance().init(getContext());
             ready = true;
         } catch (Exception e) {
             Log.e(TAG, "falha ao iniciar o yt-dlp", e);
@@ -113,7 +111,10 @@ public class YouTubePlugin extends Plugin {
             }
             YoutubeDLRequest req = new YoutubeDLRequest(url.trim());
             req.addOption("--no-playlist");
-            req.addOption("-f", "bestaudio[ext=m4a]/bestaudio/best");
+            // Áudio pronto para tocar, sem conversão: dispensa o ffmpeg (~66 MB a menos no APK).
+            // Opus/WebM vem primeiro: toca direto no Android e é menor que o M4A na mesma qualidade.
+            req.addOption("-f", "bestaudio[acodec=opus]/bestaudio[ext=m4a]/bestaudio/best");
+            req.addOption("--fixup", "never");
             req.addOption("-o", downloadDir().getAbsolutePath() + "/%(id)s.%(ext)s");
             req.addOption("--no-simulate");
             req.addOption("--progress");

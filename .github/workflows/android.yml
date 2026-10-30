@@ -35,12 +35,13 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
-          cp app/build/outputs/apk/release/app-release.apk ../MinhasMusicas.apk
+          cp app/build/outputs/apk/release/app-arm64-v8a-release.apk ../MinhasMusicas.apk
+          cp app/build/outputs/apk/release/app-armeabi-v7a-release.apk ../MinhasMusicas-32bits.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: MinhasMusicas-apk
-          path: MinhasMusicas.apk
+          path: MinhasMusicas*.apk
 
       - name: Publicar na página de Releases
         uses: softprops/action-gh-release@v2
@@ -52,4 +53,6 @@ jobs:
           body: |
             Baixe o **MinhasMusicas.apk** abaixo no celular Android e abra o arquivo para instalar.
             Se o Android pedir, permita "instalar apps desta fonte".
-          files: MinhasMusicas.apk
+
+            Celular antigo (32 bits)? Se aparecer "app não instalado", use o **MinhasMusicas-32bits.apk**.
+          files: MinhasMusicas*.apk
