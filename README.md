@@ -42,7 +42,10 @@ As músicas ficam guardadas dentro do app, então continuam lá quando você abr
 
 - Abas: Início, Buscar, Curtidas e Playlists
 - Lê título, artista, álbum e capa das tags do MP3 (ou usa o nome do arquivo `Artista - Música`)
-- Aleatório, repetir (tudo / uma), "tocar em seguida"
+- Aleatório e repetir (tudo / uma) direto na lista, lembrados ao abrir o app de novo
+- **Ordenar** por título, artista, mais recentes ou ordem personalizada
+- **Mover**: arraste ≡ para mudar a ordem da biblioteca, curtidas e playlists
+- **Fila** (botão no player): veja o que toca a seguir, arraste para reordenar ou tire músicas; "tocar em seguida"
 - Controles na tela de bloqueio e na barra de notificações
 - Formatos: MP3, M4A, AAC, FLAC, OGG, OPUS, WAV
 

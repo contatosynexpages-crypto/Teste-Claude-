@@ -126,6 +126,20 @@
   .sheet .opt:active { background: #3e3e3e; }
   .sheet .opt.danger { color: #ff6b6b; }
 
+  .toolbar { display: flex; align-items: center; gap: 8px; padding: 0 8px 12px; }
+  .chip { display: flex; align-items: center; gap: 6px; background: var(--hover); border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .chip svg { width: 16px; height: 16px; }
+  .chip.on { background: var(--accent); color: #000; }
+  .hint { color: var(--muted); font-size: 13px; }
+  .toggle { color: var(--muted); position: relative; }
+  .toggle.on { color: var(--accent); }
+  .toggle.on::after { content: ""; position: absolute; bottom: 2px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--accent); }
+  .handle { width: 40px; height: 40px; display: grid; place-items: center; color: var(--muted); touch-action: none; cursor: grab; flex-shrink: 0; }
+  .row.shift { transition: transform .15s ease; }
+  .row.dragging { background: #333; box-shadow: 0 8px 24px rgba(0,0,0,.6); position: relative; z-index: 5; transition: none; }
+  .q-label { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: 12px 8px 6px; }
+  .full-extra { display: flex; justify-content: flex-end; margin-top: 8px; }
+  .opt .check { margin-left: auto; color: var(--accent); }
   .yt-input { width: 100%; background: #3e3e3e; color: var(--text); border: none; padding: 14px 12px; border-radius: 6px; font-size: 16px; }
   .yt-input:focus { outline: 2px solid var(--accent); }
   .yt-actions { display: flex; gap: 8px; margin-top: 12px; }
@@ -173,6 +187,10 @@
   <symbol id="i-edit" viewBox="0 0 24 24"><path d="M3 17.3V21h3.8L17.8 9.9l-3.7-3.7zM20.7 7a1 1 0 0 0 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0l-1.8 1.8 3.7 3.7z"/></symbol>
   <symbol id="i-yt" viewBox="0 0 24 24"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3z"/></symbol>
   <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 2h8l6 6v14H4V2zm7 1.5V9h5.5z"/></symbol>
+  <symbol id="i-sort" viewBox="0 0 24 24"><path d="M3 6h12v2H3zm0 5h9v2H3zm0 5h6v2H3zm15-11 4 4h-3v10h-2V9h-3z"/></symbol>
+  <symbol id="i-drag" viewBox="0 0 24 24"><path d="M4 7h16v2H4zm0 4h16v2H4zm0 4h16v2H4z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6l5.6-5.6L5 6.4z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></symbol>
   <symbol id="i-install" viewBox="0 0 24 24"><path d="M11 3h2v9l3.3-3.3 1.4 1.4L12 15.8l-5.7-5.7 1.4-1.4L11 12zM4 18h16v2H4z"/></symbol>
 </svg>
 
@@ -225,6 +243,9 @@
       <button class="icon-btn" id="next"><svg><use href="#i-next"/></svg></button>
       <button class="icon-btn toggle" id="repeat"><svg><use href="#i-repeat"/></svg></button>
     </div>
+    <div class="full-extra">
+      <button class="icon-btn" id="queueBtn" title="Fila"><svg><use href="#i-queue"/></svg></button>
+    </div>
   </div>
 </section>
 
@@ -243,16 +264,19 @@
 
 <script>
 // ---------- Armazenamento (IndexedDB) ----------
-const DB_NAME = 'minhas-musicas', DB_VER = 1;
+const DB_NAME = 'minhas-musicas', DB_VER = 2;
 let db;
 function openDB() {
   return new Promise((res, rej) => {
     const r = indexedDB.open(DB_NAME, DB_VER);
-    r.onupgradeneeded = () => {
+    r.onupgradeneeded = e => {
       const d = r.result;
-      d.createObjectStore('tracks', { keyPath: 'id' });
-      d.createObjectStore('files');
-      d.createObjectStore('playlists', { keyPath: 'id' });
+      if (e.oldVersion < 1) {
+        d.createObjectStore('tracks', { keyPath: 'id' });
+        d.createObjectStore('files');
+        d.createObjectStore('playlists', { keyPath: 'id' });
+      }
+      if (e.oldVersion < 2) d.createObjectStore('meta'); // ordem, aleatório, repetir
     };
     r.onsuccess = () => res(r.result);
     r.onerror = () => rej(r.error);
@@ -262,7 +286,7 @@ function tx(store, mode, fn) {
   return new Promise((res, rej) => {
     const t = db.transaction(store, mode);
     const out = fn(t.objectStore(store));
-    t.oncomplete = () => res(out && out.result !== undefined ? out.result : out);
+    t.oncomplete = () => res(out instanceof IDBRequest ? out.result : out);
     t.onerror = () => rej(t.error);
   });
 }
@@ -270,6 +294,8 @@ const getAll = s => tx(s, 'readonly', st => st.getAll());
 const put = (s, v, k) => tx(s, 'readwrite', st => st.put(v, k));
 const del = (s, k) => tx(s, 'readwrite', st => st.delete(k));
 const getFile = id => tx('files', 'readonly', st => st.get(id));
+const getMeta = k => tx('meta', 'readonly', st => st.get(k));
+const putMeta = (k, v) => put('meta', v, k).catch(() => {});
 
 // ---------- Leitura de tags ID3 (título, artista, álbum, capa) ----------
 async function readTags(file) {
@@ -332,6 +358,9 @@ function durationOf(file) {
 let tracks = [], playlists = [];
 let view = { type: 'all' }, query = '';
 let queue = [], qIndex = -1, shuffle = false, repeat = 'off'; // off | all | one
+let baseList = [];            // lista na ordem original, para desligar o aleatório
+let sorts = {}, orders = {};  // ordenação escolhida por tela e ordem personalizada (arrastar)
+let reorderMode = false, lastViewKey = '';
 const coverUrls = {};
 const audio = document.getElementById('audio');
 const $ = id => document.getElementById(id);
@@ -504,35 +533,86 @@ if (YT) {
 }
 
 // ---------- Telas ----------
+const SORTS = { custom: 'Personalizada', title: 'Título (A–Z)', artist: 'Artista', recent: 'Mais recentes' };
+const viewKey = v => v.type === 'pl' ? 'pl:' + v.id : v.type;
+const sortOf = v => sorts[viewKey(v)] || (v.type === 'all' ? 'title' : v.type === 'fav' ? 'recent' : 'custom');
+const cmp = (a, b) => (a || '').localeCompare(b || '', 'pt', { sensitivity: 'base' });
+
+// Ordem personalizada: ids na ordem salva; músicas novas vão para o fim.
+function customOrder(list, ids) {
+  const pos = new Map((ids || []).map((id, i) => [id, i]));
+  return list.map((t, i) => [t, pos.has(t.id) ? pos.get(t.id) : 1e15 + (t.added || i)])
+    .sort((a, b) => a[1] - b[1]).map(x => x[0]);
+}
+
 function listFor(v) {
   let list;
-  if (v.type === 'fav') list = tracks.filter(t => t.fav);
-  else if (v.type === 'pl') {
+  if (v.type === 'pl') {
     const pl = playlists.find(p => p.id === v.id);
     list = pl ? pl.tracks.map(id => tracks.find(t => t.id === id)).filter(Boolean) : [];
-  } else list = [...tracks].sort((a, b) => a.title.localeCompare(b.title));
+  } else if (v.type === 'fav') list = customOrder(tracks.filter(t => t.fav), orders.fav);
+  else list = customOrder(tracks, orders.all);
   if (v.type === 'search') {
     const q = query.trim().toLowerCase();
-    list = q ? list.filter(t => (t.title + ' ' + t.artist + ' ' + t.album).toLowerCase().includes(q)) : [];
+    return q ? list.filter(t => (t.title + ' ' + t.artist + ' ' + t.album).toLowerCase().includes(q)).sort((a, b) => cmp(a.title, b.title)) : [];
   }
+  const mode = sortOf(v);
+  if (mode === 'title') list.sort((a, b) => cmp(a.title, b.title));
+  else if (mode === 'artist') list.sort((a, b) => cmp(a.artist, b.artist) || cmp(a.album, b.album) || cmp(a.title, b.title));
+  else if (mode === 'recent') list.sort((a, b) => (b.added || 0) - (a.added || 0));
   return list;
 }
 
-function trackRows(list) {
+function trackRows(list, drag) {
   const cur = current();
   return list.map((t, i) => `
     <div class="row ${cur && cur.id === t.id ? 'playing' : ''}" data-i="${i}" data-id="${t.id}">
       ${coverHtml(t)}
       <div class="meta"><div class="t-title">${esc(t.title)}</div>
         <div class="t-artist">${t.fav ? `<span class="fav-dot">♥</span> ` : ''}${esc(t.artist)}${t.duration ? ' · ' + fmt(t.duration) : ''}</div></div>
-      <button class="more" data-act="more">${icon('more')}</button>
+      ${drag ? `<button class="handle" aria-label="Mover">${icon('drag')}</button>` : `<button class="more" data-act="more">${icon('more')}</button>`}
     </div>`).join('');
+}
+
+async function saveCustomOrder(ids) {
+  if (view.type === 'pl') {
+    const p = playlists.find(p => p.id === view.id);
+    p.tracks = ids; await put('playlists', p);
+  } else {
+    orders[view.type === 'fav' ? 'fav' : 'all'] = ids; await putMeta('orders', orders);
+  }
+}
+
+async function setSort(mode) {
+  sorts[viewKey(view)] = mode; await putMeta('sorts', sorts);
+}
+
+function sortSheet() {
+  const curMode = sortOf(view);
+  openSheet(`<div class="head"><div class="t-title">Ordenar por</div></div>
+    ${Object.entries(SORTS).map(([k, label]) => `<button class="opt" data-sort="${k}">${icon(k === 'custom' ? 'drag' : 'sort')}${label}${k === curMode ? `<span class="check">${icon('check')}</span>` : ''}</button>`).join('')}`);
+  $('sheet').onclick = async e => {
+    const b = e.target.closest('[data-sort]'); if (!b) return;
+    closeSheet(); await setSort(b.dataset.sort); render();
+  };
+}
+
+async function toggleReorder() {
+  if (!reorderMode && sortOf(view) !== 'custom') {
+    // Começa a ordem personalizada a partir do que está na tela
+    await saveCustomOrder(listFor(view).map(t => t.id));
+    await setSort('custom');
+  }
+  reorderMode = !reorderMode;
+  render();
+  if (reorderMode) toast('Arraste ≡ para mudar a ordem');
 }
 
 function renderLoading(msg) { $('main').innerHTML = `<div class="empty"><h2>${msg}</h2></div>`; }
 
 function render() {
   const main = $('main');
+  if (viewKey(view) !== lastViewKey) { reorderMode = false; lastViewKey = viewKey(view); }
   const tabFor = view.type === 'pl' ? 'pls' : view.type;
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tabFor));
   const pl = view.type === 'pl' ? playlists.find(p => p.id === view.id) : null;
@@ -574,13 +654,22 @@ function render() {
       ${isMobile() ? '' : '<br><button class="pill" data-act="folder" style="background:transparent;color:#fff;border:1px solid #777">Adicionar pasta</button>'}</div>`;
   } else {
     html = `<div class="sub"><span>${list.length} música${list.length === 1 ? '' : 's'} · ${Math.round(totalDur / 60)} min</span>
-      <span style="display:flex;gap:4px;align-items:center">
-        ${pl ? `<button class="icon-btn" data-act="plmenu">${icon('more')}</button>` : ''}
-        ${list.length ? `<button class="play-big" data-act="playall">${icon('play')}</button>` : ''}</span></div>`;
-    html += list.length ? trackRows(list)
+      ${pl ? `<button class="icon-btn" data-act="plmenu">${icon('more')}</button>` : ''}</div>`;
+    if (list.length) html += reorderMode
+      ? `<div class="toolbar"><span class="hint" style="flex:1">Arraste ≡ para mover</span>
+          <button class="chip on" data-act="reorder">${icon('check')}Concluído</button></div>`
+      : `<div class="toolbar">
+          <button class="chip" data-act="sort">${icon('sort')}${SORTS[sortOf(view)]}</button>
+          ${list.length > 1 ? `<button class="chip" data-act="reorder">${icon('drag')}Mover</button>` : ''}
+          <span style="flex:1"></span>
+          <button class="icon-btn toggle" data-act="shuffle" title="Aleatório">${icon('shuffle')}</button>
+          <button class="icon-btn toggle" data-act="repeat" title="Repetir">${icon('repeat')}</button>
+          <button class="play-big" data-act="playall">${icon('play')}</button></div>`;
+    html += list.length ? trackRows(list, reorderMode)
       : `<div class="empty">${view.type === 'fav' ? 'Toque no ♡ de uma música para curtir.' : 'Playlist vazia. Use o menu ⋮ de uma música para adicionar aqui.'}</div>`;
   }
   main.innerHTML = html;
+  syncModes();
 }
 
 function markPlaying() {
@@ -589,14 +678,78 @@ function markPlaying() {
 }
 
 // ---------- Reprodução ----------
+function shuffled(arr) {
+  for (let k = arr.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [arr[k], arr[j]] = [arr[j], arr[k]]; }
+  return arr;
+}
+
 function playList(list, i) {
+  baseList = [...list];
   queue = [...list];
   if (shuffle) {
     const first = queue.splice(i, 1)[0];
-    for (let k = queue.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [queue[k], queue[j]] = [queue[j], queue[k]]; }
-    queue.unshift(first); i = 0;
+    queue = [first, ...shuffled(queue)]; i = 0;
   }
   playAt(i);
+}
+
+// Ligar embaralha o que falta tocar; desligar volta para a ordem da lista.
+function setShuffle(on) {
+  shuffle = on; putMeta('shuffle', on);
+  const cur = current();
+  if (cur) {
+    if (on) queue = [...queue.slice(0, qIndex + 1), ...shuffled(queue.slice(qIndex + 1))];
+    else {
+      const i = baseList.findIndex(t => t.id === cur.id);
+      if (i >= 0) { queue = [...baseList]; qIndex = i; }
+    }
+  }
+  syncModes();
+  toast(on ? 'Aleatório ligado' : 'Aleatório desligado');
+}
+
+function cycleRepeat() {
+  repeat = repeat === 'off' ? 'all' : repeat === 'all' ? 'one' : 'off';
+  putMeta('repeat', repeat);
+  syncModes();
+  toast({ off: 'Repetir desligado', all: 'Repetir tudo', one: 'Repetir esta música' }[repeat]);
+}
+
+function syncModes() {
+  document.querySelectorAll('#shuffle, [data-act=shuffle]').forEach(b => b.classList.toggle('on', shuffle));
+  document.querySelectorAll('#repeat, [data-act=repeat]').forEach(b => {
+    b.classList.toggle('on', repeat !== 'off');
+    setIcon(b, repeat === 'one' ? 'repeat1' : 'repeat');
+  });
+}
+
+function queueSheet() {
+  const cur = current();
+  if (!cur) { toast('Nada tocando agora'); return; }
+  const upcoming = queue.slice(qIndex + 1);
+  const meta = t => `<div class="meta"><div class="t-title">${esc(t.title)}</div><div class="t-artist">${esc(t.artist)}</div></div>`;
+  openSheet(`<div class="head"><div class="t-title" style="flex:1">Fila</div>
+      <button class="icon-btn toggle" data-act="shuffle" title="Aleatório">${icon('shuffle')}</button>
+      <button class="icon-btn toggle" data-act="repeat" title="Repetir">${icon('repeat')}</button></div>
+    <div class="q-label">Tocando agora</div>
+    <div class="row playing">${coverHtml(cur)}${meta(cur)}</div>
+    <div class="q-label">A seguir${upcoming.length > 1 ? ' · arraste ≡ para mudar a ordem' : ''}</div>
+    <div id="qList">${upcoming.map((t, i) => `
+      <div class="row" data-qi="${qIndex + 1 + i}">${coverHtml(t)}${meta(t)}
+        <button class="more" data-qrm title="Tirar da fila">${icon('close')}</button>
+        <button class="handle" aria-label="Mover">${icon('drag')}</button></div>`).join('')
+      || `<div class="empty" style="padding:24px">${repeat === 'all' ? 'Depois volta para o começo da lista' : 'Nada mais na fila'}</div>`}</div>`);
+  syncModes();
+  $('sheet').onclick = e => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'shuffle') { setShuffle(!shuffle); return queueSheet(); }
+    if (act === 'repeat') return cycleRepeat();
+    const row = e.target.closest('.row[data-qi]');
+    if (!row || e.target.closest('.handle')) return;
+    if (e.target.closest('[data-qrm]')) queue.splice(+row.dataset.qi, 1);
+    else playAt(+row.dataset.qi);
+    queueSheet();
+  };
 }
 
 async function playAt(i) {
@@ -734,7 +887,11 @@ $('main').addEventListener('click', async e => {
   if (act === 'playall') { const l = listFor(view); return playList(l, shuffle ? Math.floor(Math.random() * l.length) : 0); }
   if (act === 'plmenu') return playlistSheet(playlists.find(p => p.id === view.id));
   if (act === 'newpl') { const p = await createPlaylist(); if (p) { view = { type: 'pl', id: p.id }; render(); } return; }
-  if (!row) return;
+  if (act === 'sort') return sortSheet();
+  if (act === 'reorder') return toggleReorder();
+  if (act === 'shuffle') return setShuffle(!shuffle);
+  if (act === 'repeat') return cycleRepeat();
+  if (!row || reorderMode) return;
   if (row.dataset.go) { view = { type: row.dataset.go }; return render(); }
   if (row.dataset.pl) { view = { type: 'pl', id: row.dataset.pl }; return render(); }
   const t = tracks.find(t => t.id === row.dataset.id);
@@ -776,13 +933,73 @@ $('full').addEventListener('touchend', e => {
 $('play').onclick = togglePlay;
 $('next').onclick = () => next(false);
 $('prev').onclick = prev;
-$('shuffle').onclick = () => { shuffle = !shuffle; $('shuffle').classList.toggle('on', shuffle); toast(shuffle ? 'Aleatório ligado' : 'Aleatório desligado'); };
-$('repeat').onclick = () => {
-  repeat = repeat === 'off' ? 'all' : repeat === 'all' ? 'one' : 'off';
-  setIcon($('repeat'), repeat === 'one' ? 'repeat1' : 'repeat');
-  $('repeat').classList.toggle('on', repeat !== 'off');
-  toast({ off: 'Repetir desligado', all: 'Repetir tudo', one: 'Repetir esta música' }[repeat]);
-};
+$('shuffle').onclick = () => setShuffle(!shuffle);
+$('repeat').onclick = cycleRepeat;
+$('queueBtn').onclick = queueSheet;
+
+// ---------- Arrastar para mudar a ordem (alça ≡) ----------
+// As linhas só se deslocam com transform durante o arraste; a ordem nova é aplicada ao soltar.
+document.addEventListener('pointerdown', e => {
+  const handle = e.target.closest('.handle'); if (!handle) return;
+  e.preventDefault();
+  const row = handle.closest('.row'), box = row.parentElement;
+  const rows = [...box.children].filter(el => el.classList.contains('row') && el.querySelector('.handle'));
+  const from = rows.indexOf(row);
+  const scroller = row.closest('.sheet');
+  const scrollPos = () => scroller ? scroller.scrollTop : scrollY;
+  const s0 = scrollPos();
+  const centers = rows.map(r => { const b = r.getBoundingClientRect(); return b.top + b.height / 2 + s0; });
+  const h = row.getBoundingClientRect().height;
+  const grab = e.clientY + s0 - centers[from];
+  let y = e.clientY, to = from;
+  try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+  row.classList.add('dragging');
+  rows.forEach(r => r !== row && r.classList.add('shift'));
+  if (navigator.vibrate) navigator.vibrate(15);
+
+  const place = () => {
+    const c = y + scrollPos() - grab;
+    to = centers.filter((cc, i) => i !== from && cc < c).length;
+    row.style.transform = `translateY(${c - centers[from]}px)`;
+    rows.forEach((r, i) => {
+      if (r === row) return;
+      const d = from < to && i > from && i <= to ? -h : from > to && i >= to && i < from ? h : 0;
+      r.style.transform = d ? `translateY(${d}px)` : '';
+    });
+  };
+  // Rola sozinho ao arrastar perto da borda
+  const tick = setInterval(() => {
+    const [top, bottom] = scroller ? (b => [b.top + 60, b.bottom - 60])(scroller.getBoundingClientRect()) : [130, innerHeight - 150];
+    const d = y < top ? -10 : y > bottom ? 10 : 0;
+    if (d) { scroller ? scroller.scrollTop += d : scrollBy(0, d); place(); }
+  }, 16);
+  const move = ev => { y = ev.clientY; place(); };
+  const up = () => {
+    clearInterval(tick);
+    handle.removeEventListener('pointermove', move);
+    handle.removeEventListener('pointerup', up);
+    handle.removeEventListener('pointercancel', up);
+    rows.forEach(r => { r.style.transform = ''; r.classList.remove('shift', 'dragging'); });
+    if (to === from) return;
+    const order = [...rows];
+    order.splice(to, 0, order.splice(from, 1)[0]);
+    order.forEach(r => box.appendChild(r)); // mostra a ordem nova na hora
+    box.dispatchEvent(new CustomEvent('reorder', { detail: order, bubbles: true }));
+  };
+  handle.addEventListener('pointermove', move);
+  handle.addEventListener('pointerup', up);
+  handle.addEventListener('pointercancel', up);
+});
+
+$('main').addEventListener('reorder', async e => {
+  await saveCustomOrder(e.detail.map(r => r.dataset.id));
+  render();
+});
+$('sheet').addEventListener('reorder', e => {
+  const moved = e.detail.map(r => queue[+r.dataset.qi]);
+  queue = [...queue.slice(0, qIndex + 1), ...moved];
+  queueSheet();
+});
 let seeking = false;
 $('seek').oninput = () => { seeking = true; $('cur').textContent = fmt($('seek').value / 1000 * (audio.duration || 0)); };
 $('seek').onchange = () => { if (audio.duration) audio.currentTime = $('seek').value / 1000 * audio.duration; seeking = false; };
@@ -885,6 +1102,12 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:' && !isNative) 
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
   tracks = await getAll('tracks');
   playlists = await getAll('playlists');
+  try {
+    sorts = (await getMeta('sorts')) || {};
+    orders = (await getMeta('orders')) || {};
+    shuffle = !!(await getMeta('shuffle'));
+    repeat = (await getMeta('repeat')) || 'off';
+  } catch (e) {}
   render();
 })();
 </script>
